@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Personal Cloud Manager">
+    <title>Welcome Login Personal Cloud Management Platform</title>
+
+	<link rel="shortcut icon" href="./images/icon64.png">
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/login.css">
+    <link rel="icon" href="#">
+  </head>
+
+  <body>
+    <div class="container">
+    	<form class="form-login" action="Login" method="POST">
+    		<h3 class="form-login-heading">Welcome Login PCM</h3>
+    		<div class="input-group">
+    			<input type="text" id="user" name="user" class="form-control" placeholder="Username" oninput="userChange()"  onPropertyChange="userChange()" required autofocus>
+    			<span class="input-group-addon">@amazon.com</span>
+    		</div>
+	        
+	        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+	        <div class="checkbox">
+	          <label>
+	            <input type="checkbox" value="remember-me"> Remember me
+	          </label>
+	        </div>
+	        <button class="btn btn-lg btn-primary btn-block" type="submit" onclick="return encodepwd();">Login</button>
+	        <div id="error_message" style="color: red; font-size: 14px;"></div>
+    	</form>
+    </div>
+    
+    <script type="text/javascript" src="./js/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="./js/jquery.md5.js"></script>
+    
+    <script type="text/javascript">
+    jQuery('document').ready(function($) {    	
+    	var message = getQueryString()["message"];
+		if(message != null){
+			$('#error_message').html(message);
+		}
+		
+		$('#password').focus(function() {
+			if($('#user').val() == '') {
+				$('#error_message').html('Please input Username!');
+			} else {
+				$('#error_message').html('');
+			}
+		});
+    });
+    
+    function userChange() {
+    	$('#password').val('');
+    }
+	 
+	function getQueryString() {
+	  var result = {}, 
+	  	queryString = location.search.slice(1),
+	    re = /([^&=]+)=([^&]*)/g, m;
+	  while (m = re.exec(queryString)) {
+	    result[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+	  }
+	  return result;
+	}
+	
+	function encodepwd() { //encoding the password
+		if($('#user').val() == '') {
+			$('#error_message').html('Please input Username!');
+			return false;
+		}
+		var pwd = $('#password').val();
+		if(pwd == '') {
+			$('#error_message').html('Please input Password!');
+			return false;
+		}
+		var encoding = $.md5(pwd);
+		$('#password').val(encoding);
+		return true;
+	}
+	</script>
+
+</body>
+</html>

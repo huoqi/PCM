@@ -1,0 +1,286 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Personal Cloud Manager">
+    <title>Personal Cloud Manager - Disk</title>
+
+	<link rel="shortcut icon" href="./images/icon64.png">
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+    <link rel="icon" href="#">
+  </head>
+
+  <body>
+  	<div class="navbar navbar-default navbar-static-top" role="navgation" style="min-height: 20px; margin-bottom: 0;">
+        <div class="container" style="margin-bottom: 0;">
+            <div id="welcome-user" style="text-align: right; font-size: 12px;">
+      		
+      		</div>
+        </div>
+    </div>
+    <div class="container">
+      <div class="masterhead">
+        <div style="width: 100%; text-align: center; margin-top:1px; margin-bottom: 4px;">
+          <h3 style="margin: 10px 0 5px;"><img src="./images/icon64.png" style="max-height: 24px;"> 个人云管理平台 - 云网盘</h3>
+        </div>
+      </div>
+
+      <div class="jumbotron" style="padding: 20px 40px; margin: 0;">
+        <div class="row">
+          <div class="col-lg-3" style="padding: 0; margin-bottom: 5px;">
+          	<nav class="navbar navbar-default" role="navigation" style="padding-bottom: 10px; margin: 0;">
+          		<div class="navbar-header" style="width: 100%;">
+          			<a class="navbar-brand" style="color: #428BCA;" href="javascript:;" onclick="changeContent('', '')">Content</a>
+          		</div>
+          		<div id="content_list">
+          			<!-- jquery output here -->
+          		</div>
+          	</nav>
+          </div>
+
+          <div class="col-lg-9" style="padding-right: 0;">
+            <div class="well" style="padding: 5px 10px; margin: 0;">
+              <div class="label label-primary col-lg-10" id="location" style="padding: 5px 10px; text-align: left; font-weight: 400; font-size: 13px;">云网盘 - 当前目录:</div>
+              <button class="btn btn-success btn-xs" id="refresh" style="width: 10%; margin: 0 1.8%;">点击刷新</button>
+              <img id="fileslist_loading" style="max-height: 14px; display: none;" src="./images/ajax-loading.gif">
+              <div id="currentSubContent" name="" style="display: none; width: 0; heigh: 0;">currentSubContent</div>
+            </div>
+            <div class="well" style="padding: 5px 10px; margin: 0;">
+              <form name="form" action="" method="POST" enctype="multipart/form-data">
+                <input class="col-lg-10" type="file" id="file" name="file" style="padding: 0;" multiple></input>
+                <!-- <input type="submit" name="submit" value="upload" class="btn btn-success btn-xs" style="width: 10%; margin: 0 1.8%;" > -->
+                <button class="btn btn-success btn-xs" id="btn-upload" style="width: 10%; margin: 0 1.8%;" onclick="return ajaxFileUpload();">点击上传</button>  <!-- onclick="return ajaxFileUpload();" -->
+                <img id="file_uploading" style="max-height: 14px; display: none;" src="./images/ajax-loading.gif">
+              </form>
+            </div>
+              <div class="well" style="padding: 5px 10px; margin: 0; height: 440px; overflow-y: auto;">
+                <table class="table table-striped table-condensed table-hover">
+                  <thead>
+                    <tr style="font-size: 12px;">
+                      <th style="min-width: 60%">File</th>
+                      <th style="text-align: right;">Size</th>
+                      <th style="text-align: right;">Upload Date</th>
+                      <th style="text-align: right;">Delete</th>
+                    </tr>
+                  </thead>
+                  <tbody id="filelist" style="font-size: 12px;">
+                    <!-- jquery request files list output here -->
+                  </tbody>
+                </table>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Footer================================================== -->
+    <footer class="footer" style="text-align:center;">
+      <div class="container">
+        <h5><font color="#F7981D">Personal Cloud Manager</font><br/>
+        </h5>
+      </div>
+    </footer>
+
+    <script type="text/javascript" src="./js/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="./js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="./js/ajaxfileupload.js"></script>
+
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        $.support.cors = true;
+        $.ajaxSetup({ cache: false });
+    	
+        $.ajax({
+        	url: 'WelcomeUser',
+        	type: 'GET',
+        	dataType: 'json'
+        })
+        .done(function(jsonData) {
+        	var str = 'Hi, <a style="color: red;">' + jsonData.username + '</a> (' 
+        			+ jsonData.level + ')  <a href="Logout">退出</a>';
+        	$('#welcome-user').html(str);
+        });
+        
+        $.ajax({
+          url: 'GetContent',
+          type: 'GET',
+          dataType: 'json'
+        })
+        .done(function(jsonData) {        
+	         $.each(jsonData.content, function(index, val) {
+	           var contentListHtml = '';
+	           contentListHtml += '<ul class="nav navbar-nav" style="width: 100%;"><li class="dropdown"><a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" style="padding: 4px 15px;">';
+	           contentListHtml += val.name + '<b class="caret"></b></a><ul class="dropdown-menu">';
+	           for (var i = 0; i < val.subcontent.length; i++) {
+	             contentListHtml += '<li><a href="javascript:;" onclick="changeContent(\'' + val.name + '\',\'' + val.subcontent[i] + '\')">' + val.subcontent[i] + '</a></li>';
+	           };
+	           contentListHtml += '</ul></li></ul>';
+	           $('#content_list').append(contentListHtml);
+           });
+        })
+        .fail(function() {
+            alert("Load content error! Please Reload!");
+            location.reload();
+          });
+    	});
+
+      $('#refresh').click(function() {
+        var subContent = $('#currentSubContent').attr('name');
+        if (subContent != '') {
+          listFiles(subContent);
+        };
+      });
+      
+
+      function changeContent(content, subContent) {
+        var str = '云网盘 - 当前目录: ';
+        if(content != '') 
+        	str += content + ' >> ' + subContent;
+        $('#location').html(str);
+        $('#currentSubContent').attr('name', subContent);
+        listFiles(subContent);
+      }
+
+      function listFiles(subContent) {
+        $('#filelist').html('');
+        $('#fileslist_loading').css("display", "inline");
+        var data = new Date();
+        var t_year = 
+        $.ajax({
+          url: 'FilesList',
+          type: 'GET',
+          dataType: 'json',
+          data: {content: subContent}
+        })
+        .done(function(jsonData) {
+          $.each(jsonData, function(index, val) {
+            var filelistHtml = '<tr>';
+            filelistHtml += '<td><a href="' + val.link + '" download="' + val.filename + '">' + val.filename + '</a></td>';
+            filelistHtml += '<td style="text-align: right;">' + formatFileSize(val.size) + '</td>';
+            filelistHtml += '<td style="text-align: right;">' + dateToString(val.upload_date) + '</td>';
+            filelistHtml += '<td style="text-align: right;" id="' + val.key + '"><a href="javascript:void(0)" onclick="deleteFile(\''
+            		+ val.filename + "','" + val.key + "','" + val.content + '\')">删除</a></td>';
+            filelistHtml += '</tr>';
+            $('#filelist').append(filelistHtml);
+          });
+          $('#fileslist_loading').css("display", "none");
+        })
+        .fail(function() {
+          alert('Load Files error!');
+          location.reload();
+        })
+        .always(function() {
+        	$('#fileslist_loading').css("display", "none");
+        });
+      }
+
+      function ajaxFileUpload()
+      {
+        var subContent = $('#currentSubContent').attr('name');
+  		  var filename = $('#file').val();
+   	    if(subContent == '') {
+   		   alert("Please select a content!");
+   		   return false;
+   	    } else if(filename == '') {
+   		   alert("Please select a file!");
+   		   return false;
+   	    } else {
+	    	$("#file_uploading").css('display', 'inline'); 
+			  $.ajaxFileUpload({
+ 	        url:'FileUpload?content=' + subContent,
+ 	        secureuri:false,
+ 	        fileElementId:'file',
+ 	        dataType: 'json',
+ 	        // data:{content: subContent},
+ 	        success: function (data, status){
+ 				if(typeof(data.message) != 'undefined'){
+ 					if(data.message != ''){
+ 						alert(data.message);
+ 					}
+ 				}
+ 				$("#file_uploading").css('display', 'none');
+ 				listFiles(subContent);
+ 			 },
+ 			 error: function (data, status, e){
+ 				alert(e);
+  				$("#file_uploading").css('display', 'none');
+  				listFiles(subContent);
+ 			 }    
+ 	     });
+ 	     return false;
+   	 	 }
+ 	  }
+      
+      function deleteFile(filename, key, subContent) {
+    	  var confirmed = confirm("Do you want to delete: \"" + filename + "\" ?");
+    	  if(confirmed){
+    		  var deleting = document.getElementById(key);
+    		  deleting.innerHTML = '<img style="max-height: 12px;" src="./images/ajax-loading.gif">';
+    		 
+	    	  $.ajax({
+	    		  url: 'FileDelete',
+	    		  type: 'GET',
+	    		  dataType: 'json',
+	    		  data: {objectKey: key, content: subContent, fileName: filename}
+	    	  })
+	    	  .done(function(jsonData) {
+	    		  if(typeof(jsonData) != 'undefined') {
+	    			  alert(jsonData.message);
+	    			  var nowContent = $('#currentSubContent').attr('name');
+	    			  if (subContent == nowContent) {  //如果没有换目录，就刷新该目录
+				          listFiles(subContent);
+				      };
+	    		  }
+	    	  })
+	    	  
+	      }
+      }
+      
+      function formatFileSize(size){
+    	  if(size < 1024) return size + "B";
+    	  if(size < 1048576) {
+    		  size = size / 1024;
+    		  return size.toFixed(1) + "K";
+    	  }
+    	  if(size < 1073741824) {
+    		  size = size / 1048576;
+    		  return size.toFixed(1) + "M";
+    	  } else {
+    		  size = size / 1073741824;
+    		  return size.toFixed(1) + "G";
+    	  }
+    	  
+      }
+      
+      function dateToString(date) {
+          var myTime = new Date();
+          var now = new Date();
+          var str = '';
+          myTime.setTime(date);
+          if(now-myTime < 86400000 && now.getDate() == myTime.getDate()){  //如果在同一天，只显示时间
+        	  str = myTime.getHours() + ":";
+              var t = myTime.getMinutes();
+              if(t < 10) str += "0";  //分
+              str += t + ":";
+              var t = myTime.getSeconds();
+              if(t < 10) str += "0";  //秒
+              str += t;
+          } else {   //不在同一天显示日期
+        	  str = myTime.getFullYear() + "-" ;
+              var t = myTime.getMonth();
+              if(t < 10) str += "0";  //月
+              str += t+1 + "-";
+              var t = myTime.getDate();
+              if(t < 10) str += "0";  //天
+              str += t + " ";
+          }
+          return str;  //int换成string "2014-05-27 8:01:12"格式
+      }
+
+    </script>
+
+  </body>
+
+</html>
